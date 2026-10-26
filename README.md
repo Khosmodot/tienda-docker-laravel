@@ -1,33 +1,38 @@
 # Tienda de sabores
 
-Aplicación de la tarea Docker + Laravel: catálogo en Blade, MySQL y phpMyAdmin.
+Tarea Docker + Laravel: modelo Producto con nombre y precio, cinco productos mediante seeder y catálogo Blade en `/productos`, con precios en guaraníes. PHP 8.4 + Apache, Laravel 13, MySQL 8.0 y phpMyAdmin.
 
-## Requisitos
+## Requisitos y arranque
 
-Docker Desktop encendido con contenedores Linux. Puertos 8080, 8081 y 3308 disponibles.
-No hace falta instalar PHP, Composer, Node ni MySQL en la computadora.
+Docker con contenedores Linux y puertos 8080, 8081 y 3308 disponibles. PHP y Composer se ejecutan dentro del contenedor.
 
-## Puesta en marcha
+Si acabás de clonar el repositorio y no tenés `.env`, crealo antes de arrancar Docker:
 
-Desde esta carpeta:
+```sh
+cp .env.example .env
+```
+
+Si ya existe, conservá tu `.env`. Para MySQL, Laravel usa `DB_CONNECTION=mysql`, `DB_HOST=db` y `DB_PORT=3306`. Las credenciales deben corresponder a las del volumen existente: cambiar `.env` no cambia la contraseña de una base ya creada.
 
 ```sh
 docker compose up -d --build
-```
-
-El primer arranque instala las dependencias de `composer.lock`, crea `.env` a partir de `.env.example`, genera la clave de Laravel y prepara los permisos. Esperá a que los registros indiquen que Apache arrancó:
-
-```sh
 docker compose logs -f app
 ```
 
-Salí de los registros con Ctrl+C y ejecutá:
+Cuando Apache esté listo, salí de los registros con Ctrl+C y ejecutá:
 
 ```sh
 docker compose exec app php artisan migrate --seed
 ```
 
-Abrí http://localhost:8080/productos. El seeder carga estos productos de ejemplo:
+El arranque instala las dependencias de `composer.lock`, prepara permisos y genera la clave solamente si falta. MySQL tiene un control de salud; la aplicación y phpMyAdmin esperan a que esté disponible.
+
+- Catálogo: http://localhost:8080/productos
+- phpMyAdmin: http://localhost:8081
+- MySQL desde el equipo: `127.0.0.1:3308`
+- Ejemplo original conservado: http://localhost:8080/hola
+
+## Productos
 
 | Producto | Precio |
 | --- | ---: |
@@ -37,44 +42,42 @@ Abrí http://localhost:8080/productos. El seeder carga estos productos de ejempl
 | Sopa paraguaya | Gs. 10.000 |
 | Chipa guasu | Gs. 10.000 |
 
-El seeder se puede repetir sin duplicar los cinco registros. Los precios son datos de ejemplo de la tarea.
+Son precios de ejemplo. El seeder agrega los productos que falten, sin duplicar nombres ni actualizar precios existentes. Conserva también los productos propios. La vista muestra los registros de MySQL, escapa los nombres y contempla la lista vacía.
 
-## phpMyAdmin
+## phpMyAdmin y la red Docker
 
-Abrí http://localhost:8081 y usá el usuario `root`, contraseña `secreto`, base `laravel`.
-Las credenciales de `.env.example` son para desarrollo local. Si las cambiás, hacelo antes de crear el volumen de MySQL por primera vez.
+Ingresá con `DB_USERNAME` y `DB_PASSWORD` de tu `.env`; seleccioná la base indicada en `DB_DATABASE`. Para una instalación nueva, `.env.example` contiene credenciales locales de ejemplo.
 
-**¿Por qué PMA_HOST es db y no localhost?** Docker Compose conecta los servicios a una red y resuelve sus nombres. `db` identifica el contenedor de MySQL. Dentro de phpMyAdmin, `localhost` apunta al propio contenedor de phpMyAdmin, donde no corre MySQL. Laravel también usa `DB_HOST=db` y el puerto interno 3306. Desde Windows se usa `127.0.0.1:3308`.
+`PMA_HOST=db` apunta al servicio MySQL mediante la red de Compose. Dentro del contenedor de phpMyAdmin, `localhost` apunta al propio phpMyAdmin. Por eso tanto phpMyAdmin como Laravel usan `db:3306`, mientras el equipo accede por `127.0.0.1:3308`.
 
 ## Archivos de la tarea
 
 - `app/Models/Producto.php`: modelo con nombre y precio.
-- `database/migrations/*_create_productos_table.php`: tabla productos.
-- `database/seeders/ProductoSeeder.php`: cinco productos.
-- `app/Http/Controllers/ProductoController.php`: consulta y vista.
-- `resources/views/productos/index.blade.php`: lista con precios en guaraníes.
-- `routes/web.php`: ruta `/productos`, redirección desde `/` y ejemplo `/hola`.
-- `compose.yaml`: servicios app, db y phpmyadmin.
+- `database/migrations/2026_10_26_122600_create_productos_table.php`: tabla productos.
+- `database/seeders/ProductoSeeder.php`: cinco productos sin sobrescribir datos.
+- `app/Http/Controllers/ProductoController.php`: consulta del catálogo.
+- `resources/views/productos/index.blade.php`: lista Blade con precios en guaraníes.
+- `routes/web.php`: `/productos`, redirección desde `/` y `/hola`.
+- `compose.yaml`: app, db y phpmyadmin.
+- `captura-productos-docker.png`: captura real del catálogo servido por Docker con MySQL.
 
-## Artisan y comprobación
+La consigna utiliza `php artisan make:model Producto -mcrs` para generar la estructura. Los archivos terminados ya están incluidos: no repitas ese comando sobre esta implementación, porque puede crear otra migración. Para reproducir la generación, usá un proyecto Laravel vacío dentro del contenedor.
 
-El comando pedido por la consigna para generar la estructura inicial es:
-
-```sh
-docker compose exec app php artisan make:model Producto -mcrs
-```
-
-Los archivos terminados ya están incluidos. No lo repitas sobre ellos. Para reproducir la generación, usá un proyecto Laravel vacío y luego agregá las implementaciones de esta entrega.
+## Validación
 
 ```sh
-docker compose exec app php artisan route:list --path=productos
-docker compose exec app php artisan test
+docker compose config --quiet
+docker compose ps
 docker compose exec app php artisan migrate:status
+docker compose exec app php artisan route:list --path=productos
+docker compose exec app php artisan test --compact
 ```
 
-Las pruebas de la aplicación usan SQLite en memoria, sin modificar la base MySQL. Si querés ejecutarlas en el contenedor, la imagen instala las extensiones SQLite necesarias.
+Validado el 26/10/2026: construcción y arranque con Docker, migración y seeder en MySQL, cinco productos, repetición del seeder sin duplicados, HTTP 200 en catálogo y phpMyAdmin, y conexión desde phpMyAdmin a MySQL. Seis pruebas correctas, 20 aserciones. Las pruebas usan SQLite en memoria, separado de la base MySQL; la imagen incluye la extensión necesaria.
 
-## Trabajo diario
+La integración conservó el `.env` original byte por byte y el volumen existente `tienda_datos_db`. Los respaldos privados se guardaron fuera del repositorio, en `/home/josue/proyectos/respaldos/tienda-20261026`.
+
+## Trabajo diario y datos
 
 ```sh
 docker compose up -d
@@ -83,27 +86,12 @@ docker compose logs app
 docker compose exec app php artisan migrate --seed
 ```
 
-`down` conserva la base en el volumen `datos_db`. No hace falta borrar volúmenes para usar la aplicación.
+`docker compose down` conserva el volumen `datos_db`. No uses `down -v`, `migrate:fresh` ni `db:wipe` si necesitás conservar los datos. La migración integrada agrega la tabla productos sin recrear las tablas anteriores.
 
-## Entrega en GitHub
+## GitHub
 
-`.env`, `vendor`, `node_modules` y archivos temporales están excluidos. `.env.example` y `composer.lock` sí se incluyen.
+`.env`, dependencias y archivos temporales están excluidos. `.env.example`, `composer.lock` y la captura final se incluyen. Los respaldos con credenciales y datos quedan fuera del repositorio.
 
-Con GitHub CLI autenticado, desde esta carpeta:
+Repositorio privado: https://github.com/Khosmodot/tienda-docker-laravel
 
-```sh
-gh repo create tienda-docker-laravel --private --source=. --remote=origin --push
-```
-
-El repositorio es privado por defecto. Compartí acceso con el docente o hacelo público según lo que te solicite.
-Se incluye `captura-productos-preview.png`, una captura real de la aplicación con PHP temporal y SQLite. Reemplazala por la captura final de `http://localhost:8080/productos` después de arrancar Docker y ejecutar las migraciones. La fecha de entrega indicada por la presentación es el martes 27/10.
-
-## Fuentes técnicas
-
-- Laravel: https://laravel.com/docs/13.x
-- Docker y Laravel: https://docs.docker.com/guides/laravel/
-
-## Estado de esta entrega
-
-Consultá `ESTADO-ENTREGA.md` para distinguir las verificaciones realizadas de los pasos que dependen de Docker y del acceso a GitHub.
-
+El estado y las evidencias están en `ESTADO-ENTREGA.md`.

@@ -1,7 +1,10 @@
 <?php
+
 namespace Database\Seeders;
+
 use App\Models\Producto;
 use Illuminate\Database\Seeder;
+
 class ProductoSeeder extends Seeder
 {
     public function run(): void
@@ -13,7 +16,7 @@ class ProductoSeeder extends Seeder
             ['nombre' => 'Sopa paraguaya', 'precio' => 10000],
             ['nombre' => 'Chipa guasu', 'precio' => 10000],
         ] as $producto) {
-            Producto::updateOrCreate(['nombre' => $producto['nombre']], ['precio' => $producto['precio']]);
+            Producto::firstOrCreate(['nombre' => $producto['nombre']], ['precio' => $producto['precio']]);
         }
     }
 }

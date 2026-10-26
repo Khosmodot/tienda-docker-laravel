@@ -1,28 +1,23 @@
-# Estado de la entrega
+# Estado de la entrega — 26/10/2026
 
-## Realizado
+## Integrado y validado
 
-- Proyecto Laravel 13 con Dockerfile basado en el kit de la clase.
-- Compose con PHP 8.4 + Apache, MySQL 8.0 y phpMyAdmin en el puerto 8081.
-- Modelo, migración, controlador y seeder generados mediante `php artisan make:model Producto -mcrs` y luego implementados.
-- Cinco productos, vista Blade en `/productos` y formato `Gs. 5.000`.
-- `.env.example`, `composer.lock`, exclusión de `.env` y README con comandos y respuesta sobre `PMA_HOST=db`.
-- Repositorio Git local con la implementación.
-- Captura `captura-productos-preview.png`: página real en `http://localhost:8080/productos`, ejecutada con PHP temporal y SQLite para la vista previa.
+- Solución preparada integrada en `/home/josue/proyectos/tienda`, conservando el historial Git de origen.
+- `.env` original idéntico: comparación SHA-256 correcta antes y después.
+- Volumen MySQL original `tienda_datos_db` conservado; respaldo SQL previo fuera del repositorio.
+- Docker Compose construido y arrancado: app en 8080, MySQL 8.0 saludable y phpMyAdmin en 8081.
+- Migraciones anteriores conservadas; migración de productos ejecutada en MySQL.
+- Cinco productos consultados directamente en MySQL; seeder repetido sin duplicados.
+- Seeder ajustado para conservar precios editados y otros productos.
+- Catálogo y phpMyAdmin responden HTTP 200; conexión desde el contenedor de phpMyAdmin a MySQL comprobada con una consulta de los cinco productos.
+- Seis pruebas correctas con 20 aserciones, ejecutadas dentro del contenedor usando SQLite en memoria.
+- Captura real `captura-productos-docker.png`, tomada con Edge contra `http://localhost:8080/productos` con Laravel en Docker y datos de MySQL.
+- README actualizado con arranque, conservación de datos, credenciales desde `.env` y explicación de `PMA_HOST=db`.
 
-## Verificado
+## Respaldos privados
 
-- Cinco pruebas correctas, 17 aserciones: cinco productos, seeder repetible, formato de precios, lista vacía, escape HTML y redirección inicial.
-- Migraciones y seeder ejecutados correctamente con SQLite.
-- Catálogo abierto e inspeccionado en el navegador.
-- Configuración de Compose válida mediante `docker compose config --quiet`.
-- `.env` y `vendor` excluidos por Git; `.env.example` incluido.
+`/home/josue/proyectos/respaldos/tienda-20261026`: `.env` original, huella SHA-256, SQL antes y después, y archivos previos a la integración. No se incluyen en Git.
 
-## Pendiente por acceso al entorno
+## GitHub
 
-1. Ejecutar el proyecto con Docker y MySQL. El motor responde con acceso denegado desde esta sesión.
-2. Cumplir la evidencia específica de generación con Artisan **dentro del contenedor**. La generación realizada aquí usó PHP temporal, porque Docker no fue accesible. El README incluye el comando para reproducirla en un proyecto vacío dentro del contenedor.
-3. Tomar la captura final con la aplicación ejecutándose en Docker. La captura incluida corresponde a la vista previa con SQLite y no certifica conexión a MySQL.
-4. Publicar el repositorio y obtener el enlace de GitHub. La credencial existente de GitHub CLI está vencida o es inválida. Autenticarse nuevamente con `gh auth login`, luego seguir el README.
-
-La tarea no está entregada en GitHub ni se ha probado el arranque de los contenedores. No se borró ninguna base de datos o contenedor existente.
+Credencial de GitHub CLI válida. Entrega publicada en el repositorio privado https://github.com/Khosmodot/tienda-docker-laravel, con la captura Docker/MySQL y sin el `.env` ni los respaldos.
